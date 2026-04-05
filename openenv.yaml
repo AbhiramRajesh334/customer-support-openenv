@@ -1,0 +1,37 @@
+name: customer-support-env
+description: A real-world customer support ticket resolution environment where an AI agent classifies and resolves tickets.
+
+version: "1.0"
+
+entrypoint: app.main:app
+
+endpoints:
+  reset: /reset
+  step: /step
+  state: /state
+
+actions:
+  type: object
+  properties:
+    action_type:
+      type: string
+      enum: ["classify", "resolve"]
+    value:
+      type: string
+
+observations:
+  type: object
+  properties:
+    ticket_id:
+      type: integer
+    ticket_text:
+      type: string
+    status:
+      type: string
+    category:
+      type: string
+
+reward:
+  type: float
+  minimum: 0.0
+  maximum: 1.0
