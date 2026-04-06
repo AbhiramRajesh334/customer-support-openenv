@@ -1,6 +1,7 @@
 [project]
 name = "customer-support-openenv"
 version = "0.1.0"
+description = "Customer support environment"
 requires-python = ">=3.10"
 
 dependencies = [
@@ -13,6 +14,11 @@ dependencies = [
 ]
 
 [tool.uv]
+package = true
 
 [project.scripts]
 server = "server.app:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

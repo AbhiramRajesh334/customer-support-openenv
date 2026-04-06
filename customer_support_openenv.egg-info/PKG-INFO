@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: customer-support-openenv
+Version: 0.1.0
+Summary: Customer support environment
+Requires-Python: >=3.10
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: pydantic
+Requires-Dist: requests
+Requires-Dist: openai
+Requires-Dist: openenv-core>=0.2.0
