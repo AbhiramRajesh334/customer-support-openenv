@@ -10,14 +10,16 @@ dependencies = [
     "pydantic",
     "requests",
     "openai",
-    "openenv-core>=0.2.0"
+    "python-dotenv",
+    "huggingface_hub",
+    "httpx"
 ]
 
 [tool.uv]
 package = true
 
 [project.scripts]
-server = "server.app:main"
+server = "app.main:app"
 
 [build-system]
 requires = ["setuptools"]
