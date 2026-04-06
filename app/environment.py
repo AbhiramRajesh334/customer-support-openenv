@@ -53,7 +53,7 @@ class CustomerSupportEnv:
         # 🟢 CLASSIFY ACTION
         if action.action_type == "classify":
             if action.value == correct_category:
-                reward += 0.3
+                reward += 0.5
                 self.classified = True
                 self.status = "classified"
             else:
@@ -62,7 +62,7 @@ class CustomerSupportEnv:
         # 🔵 RESOLVE ACTION
         elif action.action_type == "resolve":
             if self.classified:
-                reward += 0.7
+                reward += 0.5
             else:
                 reward -= 0.2  # resolving without classification
 
