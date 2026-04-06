@@ -2,8 +2,7 @@
 name = "customer-support-openenv"
 version = "0.1.0"
 description = "Customer support environment"
-authors = [{name = "Abhiram"}]
-
+requires-python = ">=3.10"
 dependencies = [
     "fastapi",
     "uvicorn",
@@ -12,6 +11,8 @@ dependencies = [
     "openai",
     "openenv-core>=0.2.0"
 ]
+
+[tool.uv]
 
 [project.scripts]
 server = "server.app:main"
