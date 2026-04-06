@@ -1,8 +1,8 @@
 [project]
 name = "customer-support-openenv"
 version = "0.1.0"
-description = "Customer support environment"
 requires-python = ">=3.10"
+
 dependencies = [
     "fastapi",
     "uvicorn",
