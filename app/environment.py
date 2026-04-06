@@ -12,8 +12,11 @@ class CustomerSupportEnv:
         self.classified = False
 
     # 🔁 Reset environment
-    def reset(self):
-        self.current_task = random.choice(tasks)
+    def reset(self, task_id=None):
+        if task_id is not None:
+            self.current_task = next((t for t in tasks if t["id"] == task_id), random.choice(tasks))
+        else:
+            self.current_task = random.choice(tasks)
         self.status = "open"
         self.steps = 0
         self.classified = False

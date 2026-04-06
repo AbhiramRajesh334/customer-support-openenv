@@ -21,40 +21,59 @@ The goal is to evaluate an AI agent’s ability to:
 
 ### Observation Space
 
-The agent receives:
+The agent receives an `Observation` object:
 
-- ticket_id (int)
-- ticket_text (string)
-- status (string: open / classified / resolved)
+```json
+{
+  "ticket_id": 1,
+  "ticket_text": "I was charged twice for my order",
+  "status": "open",
+  "category": null
+}
+```
+
+- `ticket_id` (int): Unique ticket identifier
+- `ticket_text` (string): Customer complaint
+- `status` (string): "open", "classified", or "resolved"
+- `category` (string or null): Assigned category after classification
 
 ---
 
 ### Action Space
 
-The agent can perform:
+The agent sends an `Action` object:
 
-- classify → assign a category (billing, delivery, refund, technical)
-- resolve → mark the issue as resolved
+```json
+{
+  "action_type": "classify",
+  "value": "billing"
+}
+```
+
+- `action_type` (string): "classify" or "resolve"
+- `value` (string): For "classify", the category (e.g., "billing", "billing+delivery"); for "resolve", empty or ignored
 
 ---
 
 ### Reward Function
 
-- Correct classification → +0.3  
+- Correct classification → +0.5  
+- Resolve after correct classification → +0.5  
 - Incorrect classification → -0.1  
-- Resolve after classification → +0.7  
 - Resolve before classification → -0.2  
 - Step limit exceeded → -0.2  
+
+Final episode score (0.0 – 1.0) based on grader.  
 
 ---
 
 ## Tasks
 
-The environment includes 3 difficulty levels:
+The environment includes 3 difficulty levels with specific tasks:
 
-- Easy → Single issue tickets  
-- Medium → Slightly complex issues  
-- Hard → Multi-issue tickets  
+- **Easy (ID 1)**: "I was charged twice for my order" (Category: billing)  
+- **Medium (ID 3)**: "I want a refund for a damaged product" (Category: refund)  
+- **Hard (ID 5)**: "I was charged twice and my order is still not delivered" (Category: billing+delivery)  
 
 Each task has a deterministic correct outcome.
 
@@ -66,6 +85,24 @@ Final score (0.0 – 1.0):
 
 - Correct classification → 0.5  
 - Successful resolution → 0.5  
+
+---
+
+## Baseline Scores
+
+Run `python inference.py` with environment variables set. Example output:
+
+```
+[START] task=easy-ticket env=customer-support-env model=gpt-4
+[STEP] step=1 action=classify billing reward=0.50 done=false error=null
+[STEP] step=2 action=resolve  reward=0.50 done=true error=null
+[END] success=true steps=2 score=1.000 rewards=0.50,0.50
+
+[START] task=medium-ticket env=customer-support-env model=gpt-4
+...
+```
+
+*Note: Actual scores depend on the model and API.*  
 
 ---
 

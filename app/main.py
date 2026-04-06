@@ -10,8 +10,8 @@ env = CustomerSupportEnv()
 # 🔁 Reset endpoint
 @app.get("/reset")
 @app.post("/reset")
-def reset():
-    state = env.reset()
+def reset(task_id: int = None):
+    state = env.reset(task_id)
     return state.model_dump()
 
 

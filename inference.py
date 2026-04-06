@@ -23,7 +23,7 @@ You are a customer support agent.
 Ticket: {state['ticket_text']}
 
 Choose ONE action:
-1. classify with category (billing, delivery, refund, technical)
+1. classify with category (billing, delivery, refund, technical, or combinations like billing+delivery, refund+support)
 2. resolve
 
 Respond ONLY in JSON format:
@@ -54,17 +54,17 @@ Respond ONLY in JSON format:
         return {"action_type": "resolve"}
 
 
-def run_episode():
+def run_episode(task_id, difficulty):
     actions = []
     rewards = []
 
     # 🔁 Reset
     try:
-        state = requests.get(f"{BASE_URL}/reset").json()
-        task = "ticket-resolution"
+        state = requests.post(f"{BASE_URL}/reset", json={"task_id": task_id}).json()
+        task = f"{difficulty}-ticket"
         env_name = "customer-support-env"
     except Exception:
-        print("[START] task=customer-support env=openenv model={}".format(MODEL))
+        print(f"[START] task={task} env={env_name} model={MODEL}")
         print("[END] success=false steps=0 score=0.00 rewards=")
         return
 
@@ -113,4 +113,11 @@ def run_episode():
 
 
 if __name__ == "__main__":
-    run_episode()
+    # Run on 3 tasks: easy, medium, hard
+    tasks_to_run = [
+        (1, "easy"),
+        (3, "medium"),
+        (5, "hard")
+    ]
+    for task_id, difficulty in tasks_to_run:
+        run_episode(task_id, difficulty)
