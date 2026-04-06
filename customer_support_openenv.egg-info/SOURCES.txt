@@ -1,5 +1,6 @@
 README.md
 pyproject.toml
+app/__init__.py
 app/environment.py
 app/grader.py
 app/main.py

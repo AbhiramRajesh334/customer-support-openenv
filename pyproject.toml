@@ -12,14 +12,15 @@ dependencies = [
     "openai",
     "python-dotenv",
     "huggingface_hub",
-    "httpx"
+    "httpx",
+    "openenv-core>=0.2.0"
 ]
 
 [tool.uv]
 package = true
 
 [project.scripts]
-server = "app.main:app"
+server = "app.main:main"
 
 [build-system]
 requires = ["setuptools"]

@@ -3,4 +3,7 @@ uvicorn
 pydantic
 requests
 openai
+python-dotenv
+huggingface_hub
+httpx
 openenv-core>=0.2.0

@@ -3,7 +3,7 @@ description: A real-world customer support ticket resolution environment where a
 
 version: "1.0"
 
-entrypoint: app.main:app
+entrypoint: app.main:main
 
 endpoints:
   reset: /reset

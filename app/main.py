@@ -32,3 +32,7 @@ def step(action: Action):
         "done": done,
         "info": info
     }
+
+
+def main():
+    return app

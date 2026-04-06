@@ -8,4 +8,7 @@ Requires-Dist: uvicorn
 Requires-Dist: pydantic
 Requires-Dist: requests
 Requires-Dist: openai
+Requires-Dist: python-dotenv
+Requires-Dist: huggingface_hub
+Requires-Dist: httpx
 Requires-Dist: openenv-core>=0.2.0
