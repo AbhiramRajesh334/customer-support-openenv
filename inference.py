@@ -5,15 +5,49 @@ from openai import OpenAI
 from app.grader import grade_episode
 
 # 🔑 Setup OpenAI client
-client = OpenAI(
-    base_url=os.getenv("API_BASE_URL"),
-    api_key=os.getenv("OPENAI_API_KEY")
-)
+API_BASE_URL = os.getenv("API_BASE_URL")
+API_KEY = os.getenv("OPENAI_API_KEY")
 
-MODEL = os.getenv("MODEL_NAME", "unknown-model")
+client = None
+if API_KEY:
+    try:
+        client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+    except Exception as e:
+        print(f"[WARN] OpenAI client init failed: {e}")
+else:
+    print("[WARN] OPENAI_API_KEY is not set. Using fallback agent behavior.")
+
+MODEL = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
 
 # Use env variable for base URL (important for deployment)
 BASE_URL = os.getenv("ENV_BASE_URL", "http://127.0.0.1:8000")
+
+
+def get_fallback_action(state):
+    ticket = state.get("ticket_text", "").lower()
+    status = state.get("status", "")
+
+    if status == "classified" or status == "resolved":
+        return {"action_type": "resolve", "value": ""}
+
+    if "refund" in ticket and "support" in ticket:
+        category = "refund+support"
+    elif "refund" in ticket or "damaged" in ticket:
+        category = "refund"
+    elif "charged twice" in ticket and "not delivered" in ticket:
+        category = "billing+delivery"
+    elif "charged twice" in ticket:
+        category = "billing"
+    elif "not arrived" in ticket or "not delivered" in ticket:
+        category = "delivery"
+    elif "app crashes" in ticket or "crash" in ticket:
+        category = "technical"
+    elif "support" in ticket:
+        category = "refund+support"
+    else:
+        category = "billing"
+
+    return {"action_type": "classify", "value": category}
 
 
 def get_action_from_llm(state):
@@ -33,6 +67,9 @@ Respond ONLY in JSON format:
 }}
 """
 
+    if client is None:
+        return get_fallback_action(state)
+
     try:
         response = client.chat.completions.create(
             model=MODEL,
@@ -49,22 +86,23 @@ Respond ONLY in JSON format:
 
         return json.loads(action_json)
 
-    except Exception:
-        # fallback safe action
-        return {"action_type": "resolve"}
+    except Exception as e:
+        print(f"[WARN] LLM request failed: {e}")
+        return get_fallback_action(state)
 
 
 def run_episode(task_id, difficulty):
     actions = []
     rewards = []
+    task = f"{difficulty}-ticket"
+    env_name = "customer-support-env"
 
     # 🔁 Reset
     try:
         state = requests.post(f"{BASE_URL}/reset", json={"task_id": task_id}).json()
-        task = f"{difficulty}-ticket"
-        env_name = "customer-support-env"
-    except Exception:
+    except Exception as e:
         print(f"[START] task={task} env={env_name} model={MODEL}")
+        print(f"[WARN] Failed to reset environment: {e}")
         print("[END] success=false steps=0 score=0.00 rewards=")
         return
 
