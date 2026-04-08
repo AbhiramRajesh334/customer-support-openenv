@@ -62,25 +62,21 @@ Respond ONLY in JSON format:
 }}
 """
 
-    try:
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0
-        )
+    # MUST use the injected LLM proxy - no fallback allowed
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
 
-        content = response.choices[0].message.content.strip()
+    content = response.choices[0].message.content.strip()
 
-        # 🔒 Safe JSON extraction
-        start = content.find("{")
-        end = content.rfind("}") + 1
-        action_json = content[start:end]
+    # 🔒 Safe JSON extraction
+    start = content.find("{")
+    end = content.rfind("}") + 1
+    action_json = content[start:end]
 
-        return json.loads(action_json)
-
-    except Exception as e:
-        print(f"[WARN] LLM request failed: {e}")
-        return get_fallback_action(state)
+    return json.loads(action_json)
 
 
 def run_episode(task_id, difficulty):
