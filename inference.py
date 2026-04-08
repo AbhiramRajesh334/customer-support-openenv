@@ -5,12 +5,21 @@ from openai import OpenAI
 from app.grader import grade_episode
 
 # 🔑 Setup OpenAI client with injected proxy credentials.
-# This must use API_BASE_URL and HF_TOKEN provided by the hackathon runtime.
-API_BASE_URL = os.environ["API_BASE_URL"].rstrip("/")
-HF_TOKEN = os.environ["HF_TOKEN"]
+# Debug: Print what env vars are actually set
+print(f"[DEBUG] API_BASE_URL={os.environ.get('API_BASE_URL', 'NOT SET')}")
+print(f"[DEBUG] API_KEY={os.environ.get('API_KEY', 'NOT SET')}")
+print(f"[DEBUG] HF_TOKEN={os.environ.get('HF_TOKEN', 'NOT SET')}")
+print(f"[DEBUG] MODEL_NAME={os.environ.get('MODEL_NAME', 'NOT SET')}")
 
-client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+# Try API_KEY first (per error message), then fallback to HF_TOKEN
+API_BASE_URL = os.environ["API_BASE_URL"].rstrip("/")
+api_key_var = os.environ.get("API_KEY") or os.environ.get("HF_TOKEN")
+if not api_key_var:
+    raise ValueError("Neither API_KEY nor HF_TOKEN is set in environment")
+
+client = OpenAI(base_url=API_BASE_URL, api_key=api_key_var)
 print(f"[INFO] Using LLM proxy: {API_BASE_URL}")
+print(f"[INFO] OpenAI client initialized successfully")
 
 MODEL = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
 
@@ -63,11 +72,17 @@ Respond ONLY in JSON format:
 """
 
     # MUST use the injected LLM proxy - no fallback allowed
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0
-    )
+    print(f"[DEBUG] Calling LLM with model={MODEL}, base_url={API_BASE_URL}")
+    try:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0
+        )
+        print(f"[DEBUG] LLM call succeeded")
+    except Exception as e:
+        print(f"[ERROR] LLM API call failed: {e}")
+        raise
 
     content = response.choices[0].message.content.strip()
 
