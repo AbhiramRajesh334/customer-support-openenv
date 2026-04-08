@@ -6,7 +6,7 @@ from app.grader import grade_episode
 
 # 🔑 Setup OpenAI client
 API_BASE_URL = os.getenv("API_BASE_URL")
-API_KEY = os.getenv("OPENAI_API_KEY")
+API_KEY = os.getenv("API_KEY")
 
 client = None
 if API_KEY:
@@ -15,7 +15,7 @@ if API_KEY:
     except Exception as e:
         print(f"[WARN] OpenAI client init failed: {e}")
 else:
-    print("[WARN] OPENAI_API_KEY is not set. Using fallback agent behavior.")
+    print("[WARN] API_KEY is not set. Using fallback agent behavior.")
 
 MODEL = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
 
