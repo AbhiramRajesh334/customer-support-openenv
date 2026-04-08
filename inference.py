@@ -5,21 +5,13 @@ from openai import OpenAI
 from app.grader import grade_episode
 
 # 🔑 Setup OpenAI client with injected proxy credentials.
-# Debug: Print what env vars are actually set
-print(f"[DEBUG] API_BASE_URL={os.environ.get('API_BASE_URL', 'NOT SET')}")
-print(f"[DEBUG] API_KEY={os.environ.get('API_KEY', 'NOT SET')}")
-print(f"[DEBUG] HF_TOKEN={os.environ.get('HF_TOKEN', 'NOT SET')}")
-print(f"[DEBUG] MODEL_NAME={os.environ.get('MODEL_NAME', 'NOT SET')}")
+API_BASE_URL = os.getenv("API_BASE_URL")
+API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
 
-# Try API_KEY first (per error message), then fallback to HF_TOKEN
-API_BASE_URL = os.environ["API_BASE_URL"].rstrip("/")
-api_key_var = os.environ.get("API_KEY") or os.environ.get("HF_TOKEN")
-if not api_key_var:
-    raise ValueError("Neither API_KEY nor HF_TOKEN is set in environment")
+if not API_BASE_URL or not API_KEY:
+    raise EnvironmentError("API_BASE_URL and API_KEY/HF_TOKEN must be set in the environment")
 
-client = OpenAI(base_url=API_BASE_URL, api_key=api_key_var)
-print(f"[INFO] Using LLM proxy: {API_BASE_URL}")
-print(f"[INFO] OpenAI client initialized successfully")
+client = OpenAI(base_url=API_BASE_URL.rstrip("/"), api_key=API_KEY)
 
 MODEL = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
 
@@ -72,17 +64,11 @@ Respond ONLY in JSON format:
 """
 
     # MUST use the injected LLM proxy - no fallback allowed
-    print(f"[DEBUG] Calling LLM with model={MODEL}, base_url={API_BASE_URL}")
-    try:
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0
-        )
-        print(f"[DEBUG] LLM call succeeded")
-    except Exception as e:
-        print(f"[ERROR] LLM API call failed: {e}")
-        raise
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
 
     content = response.choices[0].message.content.strip()
 
@@ -99,58 +85,64 @@ def run_episode(task_id, difficulty):
     rewards = []
     task = f"{difficulty}-ticket"
     env_name = "customer-support-env"
+    start_printed = False
 
-    # 🔁 Reset
     try:
-        state = requests.post(f"{BASE_URL}/reset", json={"task_id": task_id}).json()
-    except Exception as e:
-        print(f"[START] task={task} env={env_name} model={MODEL}")
-        print(f"[WARN] Failed to reset environment: {e}")
-        print("[END] success=false steps=0 score=0.00 rewards=")
-        return
-
-    print(f"[START] task={task} env={env_name} model={MODEL}")
-
-    done = False
-    step_count = 0
-    max_steps = 5
-
-    while not done and step_count < max_steps:
-        step_count += 1
-
-        action = get_action_from_llm(state)
-        action_type = action.get("action_type", "resolve")
-        value = action.get("value", "")
-
-        action_str = f"{action_type} {value}".strip()
-
-        error = None
-
         try:
-            response = requests.post(f"{BASE_URL}/step", json=action).json()
-            state = response.get("observation", {})
-            reward = float(response.get("reward", 0.0))
-            done = response.get("done", True)
+            state = requests.post(f"{BASE_URL}/reset", json={"task_id": task_id}).json()
         except Exception as e:
-            reward = 0.0
-            done = True
-            error = str(e)
+            print(f"[START] task={task} env={env_name} model={MODEL}")
+            print(f"[END] success=false steps=0 score=0.00 rewards=")
+            return
 
-        rewards.append(reward)
-        actions.append(action)
+        print(f"[START] task={task} env={env_name} model={MODEL}")
+        start_printed = True
 
-        print(f"[STEP] step={step_count} action={action_str} reward={reward:.2f} done={str(done).lower()} error={error or 'null'}")
+        done = False
+        step_count = 0
+        max_steps = 5
 
-    # Final score
-    score = grade_episode(actions, {
-        "category": state.get("category", "")
-    })
+        while not done and step_count < max_steps:
+            step_count += 1
 
-    success = score >= 0.5
+            action = get_action_from_llm(state)
+            action_type = action.get("action_type", "resolve")
+            value = action.get("value", "")
 
-    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+            action_str = f"{action_type} {value}".strip()
 
-    print(f"[END] success={str(success).lower()} steps={step_count} score={score:.3f} rewards={rewards_str}")
+            error = None
+
+            try:
+                response = requests.post(f"{BASE_URL}/step", json=action).json()
+                state = response.get("observation", {})
+                reward = float(response.get("reward", 0.0))
+                done = response.get("done", True)
+            except Exception as e:
+                reward = 0.0
+                done = True
+                error = str(e)
+
+            rewards.append(reward)
+            actions.append(action)
+
+            print(f"[STEP] step={step_count} action={action_str} reward={reward:.2f} done={str(done).lower()} error={error or 'null'}")
+
+        score = grade_episode(actions, {
+            "category": state.get("category", "")
+        })
+
+        success = score >= 0.5
+
+        rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+
+        print(f"[END] success={str(success).lower()} steps={step_count} score={score:.3f} rewards={rewards_str}")
+
+    except Exception:
+        if not start_printed:
+            print(f"[START] task={task} env={env_name} model={MODEL}")
+        print("[END] success=false steps=0 score=0.000 rewards=")
+        return
 
 
 if __name__ == "__main__":
