@@ -4,11 +4,13 @@ import json
 from openai import OpenAI
 from app.grader import grade_episode
 
-# 🔑 Setup OpenAI client
-API_BASE_URL = os.environ["API_BASE_URL"]
+# 🔑 Setup OpenAI client with injected proxy credentials.
+# This must use API_BASE_URL and API_KEY provided by the hackathon runtime.
+API_BASE_URL = os.environ["API_BASE_URL"].rstrip("/")
 API_KEY = os.environ["API_KEY"]
 
 client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+print(f"[INFO] Using LLM proxy: {API_BASE_URL}")
 
 MODEL = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
 
