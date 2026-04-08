@@ -5,17 +5,10 @@ from openai import OpenAI
 from app.grader import grade_episode
 
 # 🔑 Setup OpenAI client
-API_BASE_URL = os.getenv("API_BASE_URL")
-API_KEY = os.getenv("API_KEY")
+API_BASE_URL = os.environ["API_BASE_URL"]
+API_KEY = os.environ["API_KEY"]
 
-client = None
-if API_KEY:
-    try:
-        client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-    except Exception as e:
-        print(f"[WARN] OpenAI client init failed: {e}")
-else:
-    print("[WARN] API_KEY is not set. Using fallback agent behavior.")
+client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
 MODEL = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
 
@@ -66,9 +59,6 @@ Respond ONLY in JSON format:
     "value": "..."
 }}
 """
-
-    if client is None:
-        return get_fallback_action(state)
 
     try:
         response = client.chat.completions.create(
