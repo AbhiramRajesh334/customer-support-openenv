@@ -11,7 +11,7 @@ API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
 if not API_BASE_URL or not API_KEY:
     raise EnvironmentError("API_BASE_URL and API_KEY/HF_TOKEN must be set in the environment")
 
-client = OpenAI(base_url=API_BASE_URL.rstrip("/"), api_key=API_KEY)
+client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
 MODEL = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
 
