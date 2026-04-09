@@ -1,11 +1,4 @@
 def grade_episode(actions, task):
-    """
-    actions: list of actions taken by agent
-    task: current task dictionary
-
-    returns: score between 0.0 and 1.0
-    """
-
     score = 0.0
 
     correct_category = task["category"]
@@ -13,7 +6,6 @@ def grade_episode(actions, task):
     classified_correctly = False
     resolved = False
 
-    # 🔍 Check actions
     for action in actions:
         if action["action_type"] == "classify":
             if action["value"] == correct_category:
@@ -22,11 +14,16 @@ def grade_episode(actions, task):
         if action["action_type"] == "resolve":
             resolved = True
 
-    # ✅ Scoring logic
     if classified_correctly:
         score += 0.5
 
     if resolved:
         score += 0.5
+
+    # 🔥 Fix for validator constraint
+    if score == 0.0:
+        score = 0.01
+    elif score == 1.0:
+        score = 0.99
 
     return round(score, 2)
