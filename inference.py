@@ -5,13 +5,13 @@ from openai import OpenAI
 from app.grader import grade_episode
 
 # 🔑 Setup OpenAI client with injected proxy credentials.
-API_BASE_URL = os.getenv("API_BASE_URL")
-API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
+client = OpenAI(
+    base_url=os.environ["API_BASE_URL"],  # use directly
+    api_key=os.environ["API_KEY"]         # use directly
+)
 
-if not API_BASE_URL or not API_KEY:
-    raise EnvironmentError("API_BASE_URL and API_KEY/HF_TOKEN must be set in the environment")
-
-client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+if "API_BASE_URL" not in os.environ or "API_KEY" not in os.environ:
+    raise EnvironmentError("API_BASE_URL and API_KEY must be set in the environment")
 
 MODEL = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
 
